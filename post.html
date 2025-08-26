@@ -34,6 +34,27 @@
         <div class="empty" id="empty" style="display:none;">Post not found.</div>
     </div>
 
-    <script src="blog.js"></script>
+    <script>
+    (function(){
+        function ghSettings(){ try{return JSON.parse(localStorage.getItem('portfolio_github_settings'))||null}catch(e){return null} }
+        async function readRelative(path){ try{ var r=await fetch(path,{cache:'no-cache'}); if(!r.ok) throw new Error('x'); return await r.text(); }catch(e){ throw e } }
+        async function readGhRaw(path){ var s=ghSettings(); if(!s||!s.owner||!s.repo||!s.branch) throw new Error('no gh'); var url='https://raw.githubusercontent.com/'+encodeURIComponent(s.owner)+'/'+encodeURIComponent(s.repo)+'/'+encodeURIComponent(s.branch)+'/'+path; var res=await fetch(url,{cache:'no-cache'}); if(!res.ok) throw new Error('not found'); return await res.text(); }
+        function getLocalPost(id){ try{var posts=JSON.parse(localStorage.getItem('portfolio_blog_posts'))||[]; return posts.find(p=>p.id===id)||null}catch(e){return null} }
+        function escapeHtml(u){return String(u).replace(/[&<"'>]/g,function(m){switch(m){case'&':return'&amp;';case'<':return'&lt;';case'"':return'&quot;';case"'":return'&#039;';case'>':return'&gt;';default:return m}})}
+        async function init(){
+            var params=new URLSearchParams(window.location.search); var id=params.get('id'); var post=null;
+            try{ var txt=await readRelative('posts/'+id+'.json'); post=JSON.parse(txt);}catch(e){}
+            if(!post){ try{ var txt2=await readGhRaw('posts/'+id+'.json'); post=JSON.parse(txt2);}catch(e){} }
+            if(!post){ post=getLocalPost(id); }
+            var cont=document.getElementById('post'); var empty=document.getElementById('empty');
+            if(!post){ empty.style.display='block'; return; }
+            var date=new Date(post.createdAt||post.updatedAt);
+            var cover=post.cover?('<img src="'+post.cover+'" class="post-cover" alt="Cover">') : '';
+            cont.innerHTML=cover+'<h1 class="post-title">'+escapeHtml(post.title)+'</h1><div class="post-meta">'+date.toDateString()+'</div><article class="post-content">'+post.content+'</article><div class="reader-actions"><a class="btn btn-secondary" href="blog.html">Write</a><button id="share" class="btn btn-primary">Share</button></div>';
+            var shareBtn=document.getElementById('share'); if(shareBtn){ shareBtn.addEventListener('click', async function(){ var data={title:post.title,text:post.excerpt||'',url:location.href}; if(navigator.share){ try{ await navigator.share(data);}catch(e){} } else { navigator.clipboard.writeText(location.href); alert('Link copied'); } }); }
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
 </body>
 </html>

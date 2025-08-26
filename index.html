@@ -189,33 +189,31 @@
     <script src="script.js"></script>
     <script>
     (function(){
-        function loadPosts(){
-            try{var posts = JSON.parse(localStorage.getItem('portfolio_blog_posts'))||[]}catch(e){var posts=[]}
+        function ghSettings(){ try{return JSON.parse(localStorage.getItem('portfolio_github_settings'))||null}catch(e){return null} }
+        async function fetchRelativeIndex(){
+            try{ var res = await fetch('posts/index.json', {cache:'no-cache'}); if(!res.ok) return null; return await res.json(); }catch(e){ return null }
+        }
+        async function fetchGhRawIndex(){
+            var s = ghSettings(); if(!s||!s.owner||!s.repo||!s.branch) return null;
+            var url = 'https://raw.githubusercontent.com/' + encodeURIComponent(s.owner) + '/' + encodeURIComponent(s.repo) + '/' + encodeURIComponent(s.branch) + '/posts/index.json';
+            try{ var res = await fetch(url, {cache:'no-cache'}); if(!res.ok) return null; return await res.json(); }catch(e){ return null }
+        }
+        function loadLocal(){ try{return JSON.parse(localStorage.getItem('portfolio_blog_posts'))||[]}catch(e){return []} }
+        async function loadPosts(){
+            var container = document.getElementById('dynamic-blog'); if(!container) return;
+            var posts = await fetchRelativeIndex();
+            if(!posts) posts = await fetchGhRawIndex();
+            if(!posts) posts = loadLocal();
             posts.sort(function(a,b){return (b.updatedAt||0)-(a.updatedAt||0)});
-            var container = document.getElementById('dynamic-blog');
-            if(!container) return;
             container.innerHTML = '';
             if(posts.length===0){
-                container.innerHTML = `
-                    <article class="blog-card"><div class="blog-image"><i class="fas fa-robot"></i></div><div class="blog-content"><h3>No posts yet</h3><p>Start writing your first article.</p><div class="blog-meta"><span class="blog-date">—</span><span class="blog-category">Blog</span></div></div></article>
-                `;
+                container.innerHTML = '<article class="blog-card"><div class="blog-image"><i class="fas fa-robot"></i></div><div class="blog-content"><h3>No posts yet</h3><p>Start writing your first article.</p><div class="blog-meta"><span class="blog-date">—</span><span class="blog-category">Blog</span></div></div></article>';
                 return;
             }
             posts.slice(0,6).forEach(function(p){
-                var cover = p.cover ? `<img src="${p.cover}" alt="Cover" style="width:100%;height:200px;object-fit:cover;">` : '<div class="blog-image"><i class="fas fa-file-alt"></i></div>';
+                var cover = p.cover ? '<img src="'+p.cover+'" alt="Cover" style="width:100%;height:200px;object-fit:cover;">' : '<div class="blog-image"><i class="fas fa-file-alt"></i></div>';
                 var date = new Date(p.createdAt||p.updatedAt).toDateString();
-                var html = `
-                <article class="blog-card">
-                    ${cover}
-                    <div class="blog-content">
-                        <h3>${p.title?p.title:'Untitled'}</h3>
-                        <p>${p.excerpt||''}</p>
-                        <div class="blog-meta">
-                            <span class="blog-date">${date}</span>
-                            <a class="btn btn-secondary" href="post.html?id=${encodeURIComponent(p.id)}">Read</a>
-                        </div>
-                    </div>
-                </article>`;
+                var html = '<article class="blog-card">'+cover+'<div class="blog-content"><h3>'+(p.title?p.title:'Untitled')+'</h3><p>'+(p.excerpt||'')+'</p><div class="blog-meta"><span class="blog-date">'+date+'</span><a class="btn btn-secondary" href="post.html?id='+encodeURIComponent(p.id)+'">Read</a></div></div></article>';
                 container.insertAdjacentHTML('beforeend', html);
             });
         }

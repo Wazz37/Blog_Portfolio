@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Quill Editor -->
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
     <style>
         .editor-container { max-width: 900px; margin: 120px auto 80px; padding: 0 1rem; }
@@ -28,7 +27,13 @@
         .draft-list { list-style:none; padding:0; }
         .draft-list li { padding:.5rem 0; display:flex; justify-content:space-between; gap:1rem; border-bottom:1px solid #eee; }
         .draft-list .draft-actions { display:flex; gap:.5rem; }
-        .nav-back { position:fixed; top:80px; left:20px; }
+        .settings { margin-top: 1rem; background:#f8f9fa; border:1px solid #e5e5e5; border-radius:8px; padding:1rem; }
+        .settings h3 { margin-bottom:.5rem; }
+        .settings-row { display:grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+        .settings small { color:#777; display:block; margin-top:.25rem; }
+        .settings input { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; }
+        .settings-actions { display:flex; gap:.5rem; margin-top:.75rem; }
+        .mode-indicator { color:#555; font-size:.9rem; }
     </style>
 </head>
 <body>
@@ -47,10 +52,12 @@
         <div class="editor-header">
             <input id="post-title" class="editor-title" type="text" placeholder="Title..." />
             <div class="editor-actions">
-                <button id="save-draft" class="btn btn-secondary"><i class="fa fa-save"></i> Save Draft</button>
-                <button id="publish" class="btn btn-primary"><i class="fa fa-upload"></i> Publish</button>
+                <button id="save-draft-local" class="btn"><i class="fa fa-save"></i> Save Draft (Local)</button>
+                <button id="save-draft-gh" class="btn btn-secondary"><i class="fa fa-cloud"></i> Save Draft (GitHub)</button>
+                <button id="publish" class="btn btn-primary"><i class="fa fa-upload"></i> Publish (GitHub)</button>
             </div>
         </div>
+        <div class="mode-indicator" id="mode-indicator">Mode: Local Storage</div>
         <div class="cover-upload">
             <div class="cover-preview" id="cover-preview"><span>Cover</span></div>
             <div>
@@ -84,8 +91,37 @@
         </div>
         <div id="editor"></div>
 
+        <div class="settings">
+            <h3>GitHub Settings</h3>
+            <div class="settings-row">
+                <div>
+                    <label>Owner (username)</label>
+                    <input id="gh-owner" type="text" placeholder="Wazz37">
+                </div>
+                <div>
+                    <label>Repo</label>
+                    <input id="gh-repo" type="text" placeholder="Blog_Portfolio">
+                </div>
+                <div>
+                    <label>Branch</label>
+                    <input id="gh-branch" type="text" placeholder="main" value="main">
+                    <small>Use a public repo for reading without token.</small>
+                </div>
+                <div>
+                    <label>Token</label>
+                    <input id="gh-token" type="password" placeholder="ghp_...">
+                    <small>Stored only in your browser. Needed for publishing.</small>
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button id="gh-save" class="btn btn-secondary">Save Settings</button>
+                <button id="gh-clear" class="btn">Clear</button>
+                <button id="gh-test" class="btn">Test Connection</button>
+            </div>
+        </div>
+
         <div class="drafts">
-            <h3>Drafts</h3>
+            <h3>Drafts (Local)</h3>
             <ul id="draft-list" class="draft-list"></ul>
         </div>
     </div>
